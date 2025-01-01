@@ -206,8 +206,10 @@
     </div>
 
     <script>
-        // Replace this with your Render.com backend URL
-        const API_URL = 'https://your-render-backend-url.onrender.com';
+        // Get the API URL from environment or use the production URL
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://smart-news-app-backend.onrender.com';  // Replace with your Render URL once deployed
 
         function fetchNews() {
             const category = document.getElementById('category-select').value;
