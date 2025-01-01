@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart News App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --hover-color: #f1f5f9;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            background-color: var(--card-background);
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .category-select {
+            width: 100%;
+            max-width: 300px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: var(--card-background);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .category-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .category-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        #news-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem 0;
+        }
+
+        .news-card {
+            background-color: var(--card-background);
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .news-card h2 {
+            padding: 1.5rem 1.5rem 1rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .news-card h2 a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .news-card h2 a:hover {
+            color: var(--primary-color);
+        }
+
+        .news-card .description {
+            padding: 0 1.5rem 1rem;
+            color: var(--text-secondary);
+            flex-grow: 1;
+        }
+
+        .news-card .meta-info {
+            padding: 1rem 1.5rem;
+            background-color: var(--hover-color);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .news-card .source {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .news-card .category {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #dc2626;
+            background-color: #fee2e2;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .error-message p:first-child {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-message p:last-child {
+            font-size: 0.875rem;
+            color: #991b1b;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1.5rem 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            #news-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Smart News</h1>
+            <select id="category-select" class="category-select" onchange="fetchNews()">
+                <option value="">All Categories</option>
+                <option value="business">Business</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="general">General</option>
+                <option value="health">Health</option>
+                <option value="science">Science</option>
+                <option value="sports">Sports</option>
+                <option value="technology">Technology</option>
+            </select>
+        </div>
+        <div id="news-container"></div>
+    </div>
+
+    <script>
+        // Replace this with your Render.com backend URL
+        const API_URL = 'https://your-render-backend-url.onrender.com';
+
+        function fetchNews() {
+            const category = document.getElementById('category-select').value;
+            const container = document.getElementById('news-container');
+            const url = `${API_URL}/api/news${category ? `?category=${category}` : ''}`;
+
+            container.innerHTML = '<div class="loading">Loading news articles...</div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Server error: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = '';
+                    
+                    const articles = Array.isArray(data) ? data : [];
+                    
+                    if (articles.length === 0) {
+                        container.innerHTML = `
+                            <div class="error-message">
+                                <p>No news articles found${category ? ` for ${category}` : ''}.</p>
+                                <p>Try selecting a different category.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    articles.forEach(article => {
+                        const card = document.createElement('div');
+                        card.className = 'news-card';
+                        card.innerHTML = `
+                            <h2><a href="${article.url}" target="_blank">${article.title}</a></h2>
+                            <p class="description">${article.description}</p>
+                            <div class="meta-info">
+                                <p class="source">${article.source}</p>
+                                ${article.category ? `<p class="category">${article.category.charAt(0).toUpperCase() + article.category.slice(1)}</p>` : ''}
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching news:', error);
+                    container.innerHTML = `
+                        <div class="error-message">
+                            <p>Error loading news articles</p>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Fetch news when the page loads
+        fetchNews();
+    </script>
+</body>
+</html>

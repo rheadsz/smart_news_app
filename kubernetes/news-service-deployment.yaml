@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-service
+  namespace: smart-news
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: news-service
+  template:
+    metadata:
+      labels:
+        app: news-service
+    spec:
+      containers:
+        - name: news-service
+          image: smart-news/news-service:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: smart-news-config
+            - secretRef:
+                name: smart-news-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: news-service
+  namespace: smart-news
+spec:
+  selector:
+    app: news-service
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: LoadBalancer
