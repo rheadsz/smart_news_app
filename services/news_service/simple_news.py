@@ -55,7 +55,7 @@ async def get_news(category: Optional[str] = None):
             "apiKey": NEWS_API_KEY,
             "language": "en",
             "pageSize": 20,
-            "country": "us"  # Added country parameter for better results
+            "country": "us"
         }
         
         if category and category.lower() != "all":
@@ -67,22 +67,32 @@ async def get_news(category: Optional[str] = None):
         
         if response.status_code == 200:
             news_data = response.json()
-            
-            # Log sample article for debugging
-            if news_data.get("articles"):
-                sample = news_data["articles"][0]
-                logger.info(f"Sample article - Title: {sample.get('title')}, Image: {sample.get('urlToImage')}")
-            
             articles = []
-            for article in news_data.get("articles", []):
+            
+            # Define category-specific image keywords
+            category_keywords = {
+                "business": ["business", "office", "corporate", "finance"],
+                "entertainment": ["entertainment", "movie", "music", "concert"],
+                "general": ["news", "world", "event", "headline"],
+                "health": ["health", "medical", "healthcare", "wellness"],
+                "science": ["science", "research", "laboratory", "technology"],
+                "sports": ["sports", "athlete", "stadium", "game"],
+                "technology": ["technology", "computer", "innovation", "digital"]
+            }
+            
+            for idx, article in enumerate(news_data.get("articles", [])):
                 if article.get("title") and article.get("title") != "[Removed]":
-                    # Get the image URL with a default fallback
+                    # Get the image URL with a smart fallback
                     image_url = article.get("urlToImage")
-                    logger.info(f"Processing article: {article.get('title')} with image: {image_url}")
                     
-                    # Use a different fallback image service
                     if not image_url or "http" not in str(image_url):
-                        image_url = "https://picsum.photos/800/400"
+                        # Get keywords for the category
+                        keywords = category_keywords.get(category, ["news"])
+                        # Use different keyword for each article
+                        keyword = keywords[idx % len(keywords)]
+                        # Add article index to make each URL unique
+                        image_url = f"https://source.unsplash.com/800x400/?{keyword}&sig={idx}"
+                        logger.info(f"Using fallback image for {article.get('title')}: {image_url}")
                     
                     article_obj = NewsArticle(
                         title=article.get("title", ""),
@@ -93,7 +103,6 @@ async def get_news(category: Optional[str] = None):
                         category=category,
                         image_url=image_url
                     )
-                    logger.info(f"Created article object with image_url: {article_obj.image_url}")
                     articles.append(article_obj)
             
             return articles

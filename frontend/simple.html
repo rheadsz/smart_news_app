@@ -100,17 +100,45 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .news-image {
+        .image-container {
+            position: relative;
             width: 100%;
             height: 200px;
-            object-fit: cover;
+            overflow: hidden;
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
-            background-color: #f3f4f6;
-            transition: opacity 0.3s ease;
         }
 
-        .news-image.loading {
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+
+        .category-tag {
+            background-color: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .news-card:hover .news-image {
+            transform: scale(1.05);
+        }
+
+        .loading {
             opacity: 0.5;
         }
 
@@ -227,24 +255,27 @@
             : 'https://smart-news-app-backend.onrender.com';
 
         function createNewsCard(article) {
-            // Log the article data
-            console.log('Creating card for article:', article);
+            // Generate a unique fallback image based on title and category
+            const encodedTitle = encodeURIComponent(article.title.split(' ').slice(0, 3).join(' '));
+            const fallbackImage = `https://source.unsplash.com/800x400/?${article.category || 'news'},${encodedTitle}`;
             
-            // Try a different fallback image service
-            const fallbackImage = 'https://picsum.photos/800/400';
+            // Use the article's image URL or fallback
             const imageUrl = article.image_url || fallbackImage;
-            
-            console.log('Using image URL:', imageUrl);
             
             return `
                 <div class="news-card">
-                    <img 
-                        class="news-image loading" 
-                        src="${imageUrl}" 
-                        alt="${article.title}"
-                        onload="console.log('Image loaded:', this.src); this.classList.remove('loading')"
-                        onerror="console.log('Image error:', this.src); this.onerror=null; this.src='${fallbackImage}'; this.classList.remove('loading')"
-                    >
+                    <div class="image-container">
+                        <img 
+                            class="news-image loading" 
+                            src="${imageUrl}" 
+                            alt="${article.title}"
+                            onload="this.classList.remove('loading')"
+                            onerror="console.log('Image failed:', this.src); this.onerror=null; this.src='${fallbackImage}'; this.classList.remove('loading')"
+                        >
+                        <div class="image-overlay">
+                            <span class="category-tag">${article.category || 'news'}</span>
+                        </div>
+                    </div>
                     <div class="news-content">
                         <h2 class="news-title">${article.title}</h2>
                         <p class="news-description">${article.description || 'No description available'}</p>
