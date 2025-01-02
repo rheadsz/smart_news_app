@@ -276,8 +276,18 @@
             : 'https://smart-news-app-backend.onrender.com';
 
         function createNewsCard(article) {
-            // Generate a unique fallback image
-            const fallbackImage = `https://picsum.photos/seed/${article.title.length}/800/400`;
+            // Define category-specific fallback images
+            const categoryImages = {
+                'business': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab',
+                'entertainment': 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852',
+                'health': 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528',
+                'science': 'https://images.unsplash.com/photo-1507413245164-6160d8298b31',
+                'sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211',
+                'technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475'
+            };
+            
+            // Use article image or category-specific fallback
+            const fallbackImage = categoryImages[article.category] || 'https://images.unsplash.com/photo-1495020689067-958852a7765e';
             
             return `
                 <div class="news-card">
@@ -316,6 +326,7 @@
             container.innerHTML = '<div class="loading">Loading news...</div>';
             
             try {
+                console.log('Fetching news for category:', category);
                 const response = await fetch(`${API_URL}/api/news${category ? '?category=' + category : ''}`);
                 const data = await response.json();
                 

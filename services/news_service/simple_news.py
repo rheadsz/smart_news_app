@@ -70,31 +70,47 @@ async def get_news(category: Optional[str] = None):
             news_data = response.json()
             articles = []
             
+            # Log a sample article for debugging
+            if news_data.get("articles"):
+                sample = news_data["articles"][0]
+                logger.info(f"""
+                Sample Article:
+                Title: {sample.get('title')}
+                URL: {sample.get('url')}
+                Image URL: {sample.get('urlToImage')}
+                Source: {sample.get('source', {}).get('name')}
+                """)
+            
             for idx, article in enumerate(news_data.get("articles", [])):
                 if article.get("title") and article.get("title") != "[Removed]":
-                    # Get all possible image URLs from the article
-                    image_url = None
+                    # Get the image URL directly from the article
+                    image_url = article.get("urlToImage")
                     
-                    # Try urlToImage first (main article image)
-                    if article.get("urlToImage") and "http" in str(article.get("urlToImage")):
-                        image_url = article["urlToImage"]
-                        logger.info(f"Using article's main image: {image_url}")
+                    # Log the image URL we're using
+                    logger.info(f"""
+                    Article {idx + 1}:
+                    Title: {article.get('title')}
+                    Original Image URL: {image_url}
+                    """)
                     
-                    # If no main image, try to extract image from content
-                    elif article.get("content"):
-                        # Look for image URLs in content
-                        content = str(article["content"])
-                        if "http" in content and (".jpg" in content.lower() or ".png" in content.lower()):
-                            # Simple regex to find image URLs
-                            img_urls = re.findall(r'https?://[^\s<>"]+?(?:jpg|png|jpeg)', content, re.IGNORECASE)
-                            if img_urls:
-                                image_url = img_urls[0]
-                                logger.info(f"Extracted image from content: {image_url}")
-                    
-                    # If still no image, use a fallback
-                    if not image_url:
-                        image_url = f"https://picsum.photos/seed/{idx}/800/400"
-                        logger.info(f"Using fallback image: {image_url}")
+                    # Only use the image if it's a valid URL
+                    if not image_url or "http" not in str(image_url):
+                        # Use a category-specific image
+                        category_images = {
+                            "business": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab",
+                            "entertainment": "https://images.unsplash.com/photo-1603190287605-e6ade32fa852",
+                            "health": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528",
+                            "science": "https://images.unsplash.com/photo-1507413245164-6160d8298b31",
+                            "sports": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211",
+                            "technology": "https://images.unsplash.com/photo-1518770660439-4636190af475"
+                        }
+                        
+                        # Get default image for category or general news image
+                        image_url = category_images.get(
+                            category,
+                            "https://images.unsplash.com/photo-1495020689067-958852a7765e"  # Default news image
+                        )
+                        logger.info(f"Using category fallback image for {article.get('title')}: {image_url}")
                     
                     article_obj = NewsArticle(
                         title=article.get("title", ""),
