@@ -276,18 +276,8 @@
             : 'https://smart-news-app-backend.onrender.com';
 
         function createNewsCard(article) {
-            // Define category-specific fallback images
-            const categoryImages = {
-                'business': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab',
-                'entertainment': 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852',
-                'health': 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528',
-                'science': 'https://images.unsplash.com/photo-1507413245164-6160d8298b31',
-                'sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211',
-                'technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475'
-            };
-            
-            // Use article image or category-specific fallback
-            const fallbackImage = categoryImages[article.category] || 'https://images.unsplash.com/photo-1495020689067-958852a7765e';
+            // Default news image for fallback
+            const fallbackImage = 'https://images.unsplash.com/photo-1495020689067-958852a7765e';
             
             return `
                 <div class="news-card">
@@ -297,7 +287,7 @@
                             src="${article.image_url}" 
                             alt="${article.title}"
                             onload="this.classList.remove('loading')"
-                            onerror="this.onerror=null; this.src='${fallbackImage}'; this.classList.remove('loading')"
+                            onerror="console.error('Failed to load image:', this.src); this.onerror=null; this.src='${fallbackImage}'; this.classList.remove('loading')"
                         >
                         <div class="image-overlay">
                             <div class="image-meta">
@@ -330,6 +320,8 @@
                 const response = await fetch(`${API_URL}/api/news${category ? '?category=' + category : ''}`);
                 const data = await response.json();
                 
+                console.log('Received news data:', data);
+                
                 if (!response.ok) {
                     throw new Error(data.detail || 'Failed to fetch news');
                 }
@@ -342,7 +334,8 @@
                     return;
                 }
 
-                data.forEach(article => {
+                data.forEach((article, index) => {
+                    console.log(`Article ${index + 1} image URL:`, article.image_url);
                     const card = createNewsCard(article);
                     container.innerHTML += card;
                 });

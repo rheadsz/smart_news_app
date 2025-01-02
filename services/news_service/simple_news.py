@@ -70,58 +70,50 @@ async def get_news(category: Optional[str] = None):
             news_data = response.json()
             articles = []
             
-            # Log a sample article for debugging
-            if news_data.get("articles"):
-                sample = news_data["articles"][0]
+            # Log the raw response for debugging
+            logger.info("Raw NewsAPI Response:")
+            for idx, raw_article in enumerate(news_data.get("articles", [])):
                 logger.info(f"""
-                Sample Article:
-                Title: {sample.get('title')}
-                URL: {sample.get('url')}
-                Image URL: {sample.get('urlToImage')}
-                Source: {sample.get('source', {}).get('name')}
+                Article {idx + 1}:
+                Title: {raw_article.get('title')}
+                Image: {raw_article.get('urlToImage')}
                 """)
             
-            for idx, article in enumerate(news_data.get("articles", [])):
-                if article.get("title") and article.get("title") != "[Removed]":
-                    # Get the image URL directly from the article
-                    image_url = article.get("urlToImage")
-                    
-                    # Log the image URL we're using
-                    logger.info(f"""
-                    Article {idx + 1}:
-                    Title: {article.get('title')}
-                    Original Image URL: {image_url}
-                    """)
-                    
-                    # Only use the image if it's a valid URL
-                    if not image_url or "http" not in str(image_url):
-                        # Use a category-specific image
-                        category_images = {
-                            "business": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab",
-                            "entertainment": "https://images.unsplash.com/photo-1603190287605-e6ade32fa852",
-                            "health": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528",
-                            "science": "https://images.unsplash.com/photo-1507413245164-6160d8298b31",
-                            "sports": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211",
-                            "technology": "https://images.unsplash.com/photo-1518770660439-4636190af475"
-                        }
-                        
-                        # Get default image for category or general news image
-                        image_url = category_images.get(
-                            category,
-                            "https://images.unsplash.com/photo-1495020689067-958852a7765e"  # Default news image
-                        )
-                        logger.info(f"Using category fallback image for {article.get('title')}: {image_url}")
-                    
-                    article_obj = NewsArticle(
-                        title=article.get("title", ""),
-                        description=article.get("description", "No description available"),
-                        url=article.get("url", ""),
-                        source=article.get("source", {}).get("name", "Unknown Source"),
-                        published_at=article.get("publishedAt", ""),
-                        category=category,
-                        image_url=image_url
-                    )
-                    articles.append(article_obj)
+            for article in news_data.get("articles", []):
+                # Skip articles without titles or with [Removed] titles
+                if not article.get("title") or article.get("title") == "[Removed]":
+                    continue
+                
+                # Get the image URL from the article
+                image_url = article.get("urlToImage")
+                
+                # Validate the image URL
+                if image_url and isinstance(image_url, str) and image_url.startswith(('http://', 'https://')):
+                    logger.info(f"Using article's own image: {image_url} for article: {article.get('title')}")
+                else:
+                    # If no valid image URL, use a news-related fallback
+                    image_url = "https://images.unsplash.com/photo-1495020689067-958852a7765e"
+                    logger.info(f"Using fallback image for article: {article.get('title')}")
+                
+                # Create the article object
+                article_obj = NewsArticle(
+                    title=article.get("title", ""),
+                    description=article.get("description", "No description available"),
+                    url=article.get("url", ""),
+                    source=article.get("source", {}).get("name", "Unknown Source"),
+                    published_at=article.get("publishedAt", ""),
+                    category=category,
+                    image_url=image_url
+                )
+                articles.append(article_obj)
+                
+                # Log the final article object
+                logger.info(f"""
+                Created article object:
+                Title: {article_obj.title}
+                Image URL: {article_obj.image_url}
+                Category: {article_obj.category}
+                """)
             
             return articles
         else:
