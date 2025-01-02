@@ -7,12 +7,14 @@ from datetime import datetime
 import requests
 
 class NewsCategory(str, Enum):
+    #creating fixed set of categories for news articles
     BUSINESS = "business"
     TECHNOLOGY = "technology"
     SCIENCE = "science"
     HEALTH = "health"
     ENTERTAINMENT = "entertainment"
     SPORTS = "sports"
+
 
 class NewsArticle(BaseModel):
     title: str = Field(..., description="The headline or title of the news article")
