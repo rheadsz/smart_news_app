@@ -69,29 +69,14 @@ async def get_news(category: Optional[str] = None):
             news_data = response.json()
             articles = []
             
-            # Define category-specific image keywords
-            category_keywords = {
-                "business": ["business", "office", "corporate", "finance"],
-                "entertainment": ["entertainment", "movie", "music", "concert"],
-                "general": ["news", "world", "event", "headline"],
-                "health": ["health", "medical", "healthcare", "wellness"],
-                "science": ["science", "research", "laboratory", "technology"],
-                "sports": ["sports", "athlete", "stadium", "game"],
-                "technology": ["technology", "computer", "innovation", "digital"]
-            }
-            
             for idx, article in enumerate(news_data.get("articles", [])):
                 if article.get("title") and article.get("title") != "[Removed]":
                     # Get the image URL with a smart fallback
                     image_url = article.get("urlToImage")
                     
                     if not image_url or "http" not in str(image_url):
-                        # Get keywords for the category
-                        keywords = category_keywords.get(category, ["news"])
-                        # Use different keyword for each article
-                        keyword = keywords[idx % len(keywords)]
-                        # Add article index to make each URL unique
-                        image_url = f"https://source.unsplash.com/800x400/?{keyword}&sig={idx}"
+                        # Use a reliable fallback image service
+                        image_url = f"https://picsum.photos/seed/{idx}/800/400"
                         logger.info(f"Using fallback image for {article.get('title')}: {image_url}")
                     
                     article_obj = NewsArticle(
