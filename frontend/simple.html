@@ -250,31 +250,31 @@
             container.innerHTML = '<div class="loading">Loading news...</div>';
             
             try {
-                const response = await fetch(`${API_URL}/news${category ? '?category=' + category : ''}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                const response = await fetch(`${API_URL}/api/news${category ? '?category=' + category : ''}`);
+                const data = await response.json();
                 
-                const articles = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to fetch news');
+                }
                 
                 // Clear the container
                 container.innerHTML = '';
                 
-                if (articles.length === 0) {
+                if (!Array.isArray(data) || data.length === 0) {
                     container.innerHTML = '<div class="no-news">No news articles found.</div>';
                     return;
                 }
 
                 // Log the first article for debugging
-                console.log('Sample article:', articles[0]);
+                console.log('Sample article:', data[0]);
                 
-                articles.forEach(article => {
+                data.forEach(article => {
                     const card = createNewsCard(article);
                     container.innerHTML += card;
                 });
             } catch (error) {
                 console.error('Error fetching news:', error);
-                container.innerHTML = '<div class="error">Error loading news. Please try again later.</div>';
+                container.innerHTML = `<div class="error">Error loading news: ${error.message}</div>`;
             }
         }
 
