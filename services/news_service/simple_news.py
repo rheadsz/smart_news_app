@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import logging
+import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -71,13 +72,29 @@ async def get_news(category: Optional[str] = None):
             
             for idx, article in enumerate(news_data.get("articles", [])):
                 if article.get("title") and article.get("title") != "[Removed]":
-                    # Get the image URL with a smart fallback
-                    image_url = article.get("urlToImage")
+                    # Get all possible image URLs from the article
+                    image_url = None
                     
-                    if not image_url or "http" not in str(image_url):
-                        # Use a reliable fallback image service
+                    # Try urlToImage first (main article image)
+                    if article.get("urlToImage") and "http" in str(article.get("urlToImage")):
+                        image_url = article["urlToImage"]
+                        logger.info(f"Using article's main image: {image_url}")
+                    
+                    # If no main image, try to extract image from content
+                    elif article.get("content"):
+                        # Look for image URLs in content
+                        content = str(article["content"])
+                        if "http" in content and (".jpg" in content.lower() or ".png" in content.lower()):
+                            # Simple regex to find image URLs
+                            img_urls = re.findall(r'https?://[^\s<>"]+?(?:jpg|png|jpeg)', content, re.IGNORECASE)
+                            if img_urls:
+                                image_url = img_urls[0]
+                                logger.info(f"Extracted image from content: {image_url}")
+                    
+                    # If still no image, use a fallback
+                    if not image_url:
                         image_url = f"https://picsum.photos/seed/{idx}/800/400"
-                        logger.info(f"Using fallback image for {article.get('title')}: {image_url}")
+                        logger.info(f"Using fallback image: {image_url}")
                     
                     article_obj = NewsArticle(
                         title=article.get("title", ""),
