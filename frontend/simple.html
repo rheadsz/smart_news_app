@@ -106,6 +106,12 @@
             object-fit: cover;
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
+            background-color: #f3f4f6;
+            transition: opacity 0.3s ease;
+        }
+
+        .news-image.loading {
+            opacity: 0.5;
         }
 
         .news-content {
@@ -221,13 +227,17 @@
             : 'https://smart-news-app-backend.onrender.com';
 
         function createNewsCard(article) {
+            const imageUrl = article.image_url || `https://source.unsplash.com/800x400/?${article.category || 'news'}`;
+            console.log('Creating card with image URL:', imageUrl);
+            
             return `
                 <div class="news-card">
                     <img 
-                        class="news-image" 
-                        src="${article.image_url || 'https://placehold.co/600x400?text=News'}" 
+                        class="news-image loading" 
+                        src="${imageUrl}" 
                         alt="${article.title}"
-                        onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=News';"
+                        onload="this.classList.remove('loading')"
+                        onerror="this.onerror=null; this.src='https://source.unsplash.com/800x400/?${article.category || 'news'}'; this.classList.remove('loading')"
                     >
                     <div class="news-content">
                         <h2 class="news-title">${article.title}</h2>
@@ -250,6 +260,7 @@
             container.innerHTML = '<div class="loading">Loading news...</div>';
             
             try {
+                console.log('Fetching news from:', `${API_URL}/api/news${category ? '?category=' + category : ''}`);
                 const response = await fetch(`${API_URL}/api/news${category ? '?category=' + category : ''}`);
                 const data = await response.json();
                 
@@ -265,7 +276,7 @@
                     return;
                 }
 
-                // Log the first article for debugging
+                // Log sample article
                 console.log('Sample article:', data[0]);
                 
                 data.forEach(article => {

@@ -54,7 +54,8 @@ async def get_news(category: Optional[str] = None):
         params = {
             "apiKey": NEWS_API_KEY,
             "language": "en",
-            "pageSize": 20
+            "pageSize": 20,
+            "country": "us"  # Added country parameter for better results
         }
         
         if category and category.lower() != "all":
@@ -62,25 +63,25 @@ async def get_news(category: Optional[str] = None):
 
         # Make the request to NewsAPI
         response = requests.get(base_url, params=params)
-        
-        # Log the response for debugging
         logger.info(f"NewsAPI Response Status: {response.status_code}")
         
         if response.status_code == 200:
             news_data = response.json()
             
-            # Log the first article for debugging
-            if news_data.get("articles"):
-                first_article = news_data["articles"][0]
-                logger.info(f"Sample Article: Title: {first_article.get('title')}, Image: {first_article.get('urlToImage')}")
+            # Log full response for debugging
+            logger.info(f"NewsAPI Response: {news_data}")
             
             articles = []
             for article in news_data.get("articles", []):
                 if article.get("title") and article.get("title") != "[Removed]":
                     # Get the image URL with a default fallback
                     image_url = article.get("urlToImage")
+                    logger.info(f"Original image URL: {image_url}")
+                    
+                    # Use a better default image if none is provided
                     if not image_url or "http" not in str(image_url):
-                        image_url = "https://placehold.co/600x400?text=News"
+                        image_url = f"https://source.unsplash.com/800x400/?{category or 'news'}"
+                        logger.info(f"Using fallback image: {image_url}")
                     
                     articles.append(NewsArticle(
                         title=article.get("title", ""),
