@@ -86,58 +86,67 @@
         }
 
         .news-card {
-            background-color: var(--card-background);
-            border-radius: 1rem;
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 0;
+            margin-bottom: 1.5rem;
             box-shadow: var(--shadow);
-            overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+            overflow: hidden;
         }
 
         .news-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .news-card h2 {
-            padding: 1.5rem 1.5rem 1rem;
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .news-content {
+            padding: 1.5rem;
+        }
+
+        .news-title {
             font-size: 1.25rem;
             font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
         }
 
-        .news-card h2 a {
-            color: var(--text-primary);
+        .news-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .read-more {
+            font-size: 0.875rem;
+            color: var(--primary-color);
             text-decoration: none;
             transition: color 0.2s ease;
         }
 
-        .news-card h2 a:hover {
-            color: var(--primary-color);
-        }
-
-        .news-card .description {
-            padding: 0 1.5rem 1rem;
-            color: var(--text-secondary);
-            flex-grow: 1;
-        }
-
-        .news-card .meta-info {
-            padding: 1rem 1.5rem;
-            background-color: var(--hover-color);
-            border-top: 1px solid var(--border-color);
-            font-size: 0.875rem;
-        }
-
-        .news-card .source {
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .news-card .category {
-            color: var(--primary-color);
-            font-weight: 500;
+        .read-more:hover {
+            color: var(--secondary-color);
         }
 
         .loading {
@@ -211,6 +220,28 @@
             ? 'http://localhost:8000'
             : 'https://smart-news-app-backend.onrender.com';
 
+        function createNewsCard(article) {
+            return `
+                <div class="news-card">
+                    <img 
+                        class="news-image" 
+                        src="${article.image_url}" 
+                        alt="${article.title}"
+                        onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'"
+                    >
+                    <div class="news-content">
+                        <h2 class="news-title">${article.title}</h2>
+                        <p class="news-description">${article.description || 'No description available'}</p>
+                        <div class="news-meta">
+                            <span>${article.source}</span>
+                            <span>${new Date(article.published_at).toLocaleDateString()}</span>
+                        </div>
+                        <a href="${article.url}" target="_blank" class="read-more">Read More</a>
+                    </div>
+                </div>
+            `;
+        }
+
         function fetchNews() {
             const category = document.getElementById('category-select').value;
             const container = document.getElementById('news-container');
@@ -243,17 +274,8 @@
                     }
 
                     articles.forEach(article => {
-                        const card = document.createElement('div');
-                        card.className = 'news-card';
-                        card.innerHTML = `
-                            <h2><a href="${article.url}" target="_blank">${article.title}</a></h2>
-                            <p class="description">${article.description}</p>
-                            <div class="meta-info">
-                                <p class="source">${article.source}</p>
-                                ${article.category ? `<p class="category">${article.category.charAt(0).toUpperCase() + article.category.slice(1)}</p>` : ''}
-                            </div>
-                        `;
-                        container.appendChild(card);
+                        const card = createNewsCard(article);
+                        container.innerHTML += card;
                     });
                 })
                 .catch(error => {

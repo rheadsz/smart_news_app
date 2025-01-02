@@ -37,6 +37,7 @@ class NewsArticle(BaseModel):
     source: str
     published_at: str
     category: Optional[str] = None
+    image_url: Optional[str] = None
 
 # Get API key from environment variable
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
@@ -85,6 +86,7 @@ async def get_news(category: Optional[str] = None):
                     raw_description = article.get("description", "")
                     raw_url = article.get("url", "")
                     raw_published = article.get("publishedAt", "")
+                    raw_image_url = article.get("urlToImage", "")
                     
                     # Clean and validate title
                     title = str(raw_title).strip() if raw_title else "No title available"
@@ -103,6 +105,9 @@ async def get_news(category: Optional[str] = None):
                     # Validate URL
                     url = str(raw_url).strip() if raw_url else "https://news.google.com"
                     
+                    # Validate image URL
+                    image_url = str(raw_image_url).strip() if raw_image_url else "https://via.placeholder.com/400x200?text=No+Image"
+                    
                     # Create the article object
                     article_obj = NewsArticle(
                         title=title,
@@ -110,7 +115,8 @@ async def get_news(category: Optional[str] = None):
                         url=url,
                         source=source_name,
                         published_at=raw_published or datetime.now().isoformat(),
-                        category=category
+                        category=category,
+                        image_url=image_url
                     )
                     articles.append(article_obj)
                     
