@@ -68,22 +68,23 @@ async def get_news(category: Optional[str] = None):
         if response.status_code == 200:
             news_data = response.json()
             
-            # Log full response for debugging
-            logger.info(f"NewsAPI Response: {news_data}")
+            # Log sample article for debugging
+            if news_data.get("articles"):
+                sample = news_data["articles"][0]
+                logger.info(f"Sample article - Title: {sample.get('title')}, Image: {sample.get('urlToImage')}")
             
             articles = []
             for article in news_data.get("articles", []):
                 if article.get("title") and article.get("title") != "[Removed]":
                     # Get the image URL with a default fallback
                     image_url = article.get("urlToImage")
-                    logger.info(f"Original image URL: {image_url}")
+                    logger.info(f"Processing article: {article.get('title')} with image: {image_url}")
                     
-                    # Use a better default image if none is provided
+                    # Use a different fallback image service
                     if not image_url or "http" not in str(image_url):
-                        image_url = f"https://source.unsplash.com/800x400/?{category or 'news'}"
-                        logger.info(f"Using fallback image: {image_url}")
+                        image_url = "https://picsum.photos/800/400"
                     
-                    articles.append(NewsArticle(
+                    article_obj = NewsArticle(
                         title=article.get("title", ""),
                         description=article.get("description", "No description available"),
                         url=article.get("url", ""),
@@ -91,7 +92,9 @@ async def get_news(category: Optional[str] = None):
                         published_at=article.get("publishedAt", ""),
                         category=category,
                         image_url=image_url
-                    ))
+                    )
+                    logger.info(f"Created article object with image_url: {article_obj.image_url}")
+                    articles.append(article_obj)
             
             return articles
         else:

@@ -227,8 +227,14 @@
             : 'https://smart-news-app-backend.onrender.com';
 
         function createNewsCard(article) {
-            const imageUrl = article.image_url || `https://source.unsplash.com/800x400/?${article.category || 'news'}`;
-            console.log('Creating card with image URL:', imageUrl);
+            // Log the article data
+            console.log('Creating card for article:', article);
+            
+            // Try a different fallback image service
+            const fallbackImage = 'https://picsum.photos/800/400';
+            const imageUrl = article.image_url || fallbackImage;
+            
+            console.log('Using image URL:', imageUrl);
             
             return `
                 <div class="news-card">
@@ -236,8 +242,8 @@
                         class="news-image loading" 
                         src="${imageUrl}" 
                         alt="${article.title}"
-                        onload="this.classList.remove('loading')"
-                        onerror="this.onerror=null; this.src='https://source.unsplash.com/800x400/?${article.category || 'news'}'; this.classList.remove('loading')"
+                        onload="console.log('Image loaded:', this.src); this.classList.remove('loading')"
+                        onerror="console.log('Image error:', this.src); this.onerror=null; this.src='${fallbackImage}'; this.classList.remove('loading')"
                     >
                     <div class="news-content">
                         <h2 class="news-title">${article.title}</h2>
@@ -260,9 +266,11 @@
             container.innerHTML = '<div class="loading">Loading news...</div>';
             
             try {
-                console.log('Fetching news from:', `${API_URL}/api/news${category ? '?category=' + category : ''}`);
+                console.log('Fetching news for category:', category);
                 const response = await fetch(`${API_URL}/api/news${category ? '?category=' + category : ''}`);
                 const data = await response.json();
+                
+                console.log('API Response:', data);
                 
                 if (!response.ok) {
                     throw new Error(data.detail || 'Failed to fetch news');
@@ -276,9 +284,6 @@
                     return;
                 }
 
-                // Log sample article
-                console.log('Sample article:', data[0]);
-                
                 data.forEach(article => {
                     const card = createNewsCard(article);
                     container.innerHTML += card;
